@@ -1,0 +1,335 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #65661a, #c9db82);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ── Header ── */
+header {
+    width: 100%;
+    background-color: #dee39a;
+    padding: 16px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+header h1 {
+    font-size: 1.3rem;
+    color: #3a3b00;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.9rem;
+    color: #3a3b00;
+    font-weight: bold;
+}
+
+.user-info a {
+    background-color: #bdc3c7;
+    color: #000;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: normal;
+}
+
+.user-info a:hover { background-color: #a8b0b5; }
+
+.user-info .btn-volver {
+    background-color: #dee39a;
+    color: #3a3b00;
+    border: 1.5px solid #b0b540;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: normal;
+}
+
+.user-info .btn-volver:hover { background-color: #cdd07f; }
+
+/* ── Main ── */
+main {
+    width: 100%;
+    max-width: 960px;
+    padding: 36px 20px 60px;
+}
+
+h2 {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 28px;
+    font-size: 1.15rem;
+    letter-spacing: 0.05em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* ── Tarjeta base ── */
+.card {
+    background-color: #f9f7f7;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    padding: 28px 24px;
+    margin-bottom: 20px;
+}
+
+/* ── Grid de módulos (puntoRenta) ── */
+.modulos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+@media (max-width: 680px) { .modulos-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 420px) { .modulos-grid { grid-template-columns: 1fr; } }
+
+.mod-card {
+    background-color: #f9f7f7;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    padding: 28px 20px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.mod-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.25);
+}
+
+.mod-icon {
+    width: 52px;
+    height: 52px;
+    background-color: #dee39a;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+}
+
+.mod-icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: #3a3b00;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.mod-name {
+    font-size: 0.88rem;
+    font-weight: bold;
+    color: #3a3b00;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* ── Botones generales ── */
+.btn {
+    background-color: #dee39a;
+    color: #2c2d00;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 22px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    font-weight: bold;
+}
+
+.btn:hover { background-color: #cdd07f; }
+
+.btn-secondary {
+    background-color: #bdc3c7;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 22px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-secondary:hover { background-color: #a8b0b5; }
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 22px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-danger:hover { background-color: #c0392b; }
+
+/* ── mod-btn (para puntoRenta grid) ── */
+.mod-btn {
+    background-color: #dee39a;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.15s;
+}
+
+.mod-btn:hover { background-color: #cdd07f; }
+
+/* ── Formularios ── */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #3a3b00;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 6px;
+    border: 1.5px solid #c8ca89;
+    font-size: 0.9rem;
+    background: #fff;
+    color: #333;
+    transition: border-color 0.15s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #8a8c1f;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+/* ── Tablas ── */
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+thead th {
+    background-color: #dee39a;
+    color: #3a3b00;
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: bold;
+}
+
+tbody tr { border-bottom: 1px solid #e8e8e8; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background-color: #f5f6e8; }
+
+tbody td {
+    padding: 10px 14px;
+    color: #333;
+}
+
+/* ── Badges / estado ── */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.badge-activo   { background: #d4edda; color: #1a5c2a; }
+.badge-inactivo { background: #f8d7da; color: #721c24; }
+.badge-pendiente{ background: #fff3cd; color: #856404; }
+.badge-pagado   { background: #d4edda; color: #1a5c2a; }
+
+/* ── Metric cards ── */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.metric-card .metric-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #3a3b00;
+    line-height: 1;
+}
+
+.metric-card .metric-label {
+    font-size: 0.78rem;
+    color: #777;
+    margin-top: 6px;
+}
+
+/* ── Sección con título ── */
+.section-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #3a3b00;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #dee39a;
+}
+/* ── Alerta / mensaje ── */
+.alert {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    margin-bottom: 14px;
+}
+
+.alert-success { background: #d4edda; color: #1a5c2a; border: 1px solid #c3e6cb; }
+.alert-error   { background: #fdecea; color: #721c24; border: 1px solid #e74c3c; }
+.alert-info    { background: #d6eaf8; color: #1a4c72; border: 1px solid #85c1e9; }

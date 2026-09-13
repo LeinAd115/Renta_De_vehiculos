@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Punto de Renta</title>
+</head>
+<body>
+
+    <header>
+        <h1>&#x2302; Punto de Renta</h1>
+        <div class="user-info">
+            <span>{{ session['usuario'] }}</span>
+            <a href="/logout">Cerrar sesión</a>
+        </div>
+    </header>
+
+    <main>
+        <h2>Selecciona un módulo</h2>
+
+        <div class="modulos-grid">
+
+            <!-- Renta Activa — acceso para todos -->
+            <div class="mod-card" data-modulo="renta_activa">
+                <div class="mod-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <div class="mod-name">Renta Activa</div>
+                <button class="mod-btn">Abrir</button>
+            </div>
+
+            <!-- Guardados — acceso para todos -->
+            <div class="mod-card" data-modulo="guardados">
+                <div class="mod-icon">
+                    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                </div>
+                <div class="mod-name">Guardados</div>
+                <button class="mod-btn">Abrir</button>
+            </div>
+
+            <!-- Configuración — solo caja -->
+            <div class="mod-card {% if 'configuracion' not in permisos %}bloqueado{% endif %}" data-modulo="configuracion">
+                <div class="mod-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09z"/>
+                    </svg>
+                </div>
+                <div class="mod-name">Configuración</div>
+                <button class="mod-btn" {% if 'configuracion' not in permisos %}disabled{% endif %}>
+                    {% if 'configuracion' not in permisos %}Sin acceso{% else %}Abrir{% endif %}
+                </button>
+            </div>
+
+            <!-- Corte — solo caja -->
+            <div class="mod-card {% if 'corte' not in permisos %}bloqueado{% endif %}" data-modulo="corte">
+                <div class="mod-icon">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                </div>
+                <div class="mod-name">Corte de Caja</div>
+                <button class="mod-btn" {% if 'corte' not in permisos %}disabled{% endif %}>
+                    {% if 'corte' not in permisos %}Sin acceso{% else %}Abrir{% endif %}
+                </button>
+            </div>
+
+            <!-- Reportes — solo caja -->
+            <div class="mod-card {% if 'reportes' not in permisos %}bloqueado{% endif %}" data-modulo="reportes">
+                <div class="mod-icon">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <div class="mod-name">Reportes</div>
+                <button class="mod-btn" {% if 'reportes' not in permisos %}disabled{% endif %}>
+                    {% if 'reportes' not in permisos %}Sin acceso{% else %}Abrir{% endif %}
+                </button>
+            </div>
+
+            <!-- Red Neuronal — solo caja -->
+            <div class="mod-card {% if 'red_neuronal' not in permisos %}bloqueado{% endif %}" data-modulo="red_neuronal">
+                <div class="mod-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/>
+                        <circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/>
+                        <line x1="6" y1="6" x2="10" y2="11"/><line x1="18" y1="6" x2="14" y2="11"/>
+                        <line x1="6" y1="18" x2="10" y2="13"/><line x1="18" y1="18" x2="14" y2="13"/>
+                    </svg>
+                </div>
+                <div class="mod-name">Red Neuronal</div>
+                <button class="mod-btn" {% if 'red_neuronal' not in permisos %}disabled{% endif %}>
+                    {% if 'red_neuronal' not in permisos %}Sin acceso{% else %}Abrir{% endif %}
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='Punto_Renta.js') }}"></script>
+</body>
+</html>

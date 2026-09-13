@@ -1,0 +1,80 @@
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Fondo general */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #65661a, #c9db82);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.ingreso {
+    background-color: rgb(249, 247, 247);
+    padding: 30px;
+    border-radius: 12px;
+    width: 300px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+    display: flex;
+    flex-direction: column;
+}
+h2 {
+    position: absolute;
+    top: 70px;
+    width: 100%;
+    text-align: center;
+    color: black
+}
+/* Labels */
+.ingreso label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+
+/* Inputs */
+.ingreso input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.botones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    width: 300px;
+}
+
+button {
+    width: 80%;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+/* Botón principal */
+#btnIngresar {
+    background-color: #dee39a;
+    color: rgb(0, 0, 0);
+}
+
+/* Botón secundario */
+#btnRC {
+    background-color: #bdc3c7;
+}
+

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='LoginPR_style.css') }}">
+    <title>Amistosos</title>
+</head>
+
+<body>
+    <h2>Iniciar Sesíon</h2>
+
+    <div class="ingreso">
+        <label>Ingresar Usuario: </label>
+        <input type="text" name="Usuario">
+
+        <label>Ingresar Contraseña: </label>
+        <input type="password" name="Contraseña">
+    
+
+    <div class="botones">         
+        <button id="btnIngresar">Ingresar</button>
+        <button id="btnRC">Recuperar Contraseña</button>
+        
+    </div>
+    </div>
+    <script src="{{ url_for('static', filename='loginjs.js') }}"></script>
+</body>
+</html>

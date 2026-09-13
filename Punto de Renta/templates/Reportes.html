@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+    <title>Reportes – Punto de Renta</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>&#x2302; Punto de Renta</h1>
+        <div class="user-info">
+            <a href="/punto_renta" class="btn-volver">← Volver</a>
+            <span>{{ session['usuario'] }}</span>
+            <a href="/logout">Cerrar sesión</a>
+        </div>
+    </header>
+
+    <main>
+        <h2>Reportes</h2>
+
+        <!-- Filtro de período -->
+        <div class="card">
+            <div class="section-title">Período de análisis</div>
+            <div class="form-row" style="align-items:flex-end;">
+                <div class="form-group">
+                    <label>Desde</label>
+                    <input type="date" id="repDesde">
+                </div>
+                <div class="form-group">
+                    <label>Hasta</label>
+                    <input type="date" id="repHasta">
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end; padding-bottom:0;">
+                    <button class="btn" onclick="cargarReportes()">Generar reporte</button>
+                </div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-secondary" style="font-size:0.78rem; padding:5px 12px;" onclick="setRango('semana')">Esta semana</button>
+                <button class="btn-secondary" style="font-size:0.78rem; padding:5px 12px;" onclick="setRango('mes')">Este mes</button>
+                <button class="btn-secondary" style="font-size:0.78rem; padding:5px 12px;" onclick="setRango('trimestre')">Último trimestre</button>
+            </div>
+        </div>
+
+        <!-- Métricas resumen -->
+        <div class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-value" id="rTotalRentas">—</div>
+                <div class="metric-label">Total rentas</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="rIngresos">—</div>
+                <div class="metric-label">Ingresos cobrados</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="rPromedio">—</div>
+                <div class="metric-label">Ticket promedio</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="rArticuloTop">—</div>
+                <div class="metric-label">Artículo más rentado</div>
+            </div>
+        </div>
+
+        <!-- Gráficas -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <div class="card">
+                <div class="section-title">Ingresos por día</div>
+                <canvas id="graficaDia" height="220"></canvas>
+            </div>
+            <div class="card">
+                <div class="section-title">Artículos más rentados</div>
+                <canvas id="graficaArticulos" height="220"></canvas>
+            </div>
+        </div>
+
+        <!-- Top clientes -->
+        <div class="card" style="margin-top:18px;">
+            <div class="section-title">Top clientes del período</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Rentas</th>
+                            <th>Total gastado</th>
+                            <th>Último artículo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaClientes">
+                        <tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">Genera un reporte para ver los datos.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let grafDia = null, grafArt = null;
+
+        const hoy = new Date();
+        const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+        document.getElementById('repDesde').value = primerDiaMes;
+        document.getElementById('repHasta').value = hoy.toISOString().split('T')[0];
+
+        function setRango(tipo) {
+            const hoyD = new Date();
+            let desde;
+            if (tipo === 'semana') {
+                desde = new Date(hoyD); desde.setDate(hoyD.getDate() - 6);
+            } else if (tipo === 'mes') {
+                desde = new Date(hoyD.getFullYear(), hoyD.getMonth(), 1);
+            } else {
+                desde = new Date(hoyD); desde.setMonth(hoyD.getMonth() - 3);
+            }
+            document.getElementById('repDesde').value = desde.toISOString().split('T')[0];
+            document.getElementById('repHasta').value = hoyD.toISOString().split('T')[0];
+            cargarReportes();
+        }
+
+        async function cargarReportes() {
+            const desde = document.getElementById('repDesde').value;
+            const hasta = document.getElementById('repHasta').value;
+            if (!desde || !hasta) { alert('Selecciona un período.'); return; }
+
+            try {
+                const resp = await fetch(`/obtener_reportes?desde=${desde}&hasta=${hasta}`);
+                const data = await resp.json();
+                const rentas = data.rentas || [];
+
+                if (!rentas.length) {
+                    limpiarMetricas();
+                    return;
+                }
+
+                // Métricas
+                const totalIngresado = rentas.reduce((s,r) => s + parseFloat(r.anticipo||0), 0);
+                const promedio = rentas.length ? totalIngresado / rentas.length : 0;
+
+                // Top artículo
+                const artCount = {};
+                rentas.forEach(r => artCount[r.articulo] = (artCount[r.articulo]||0) + 1);
+                const topArt = Object.entries(artCount).sort((a,b) => b[1]-a[1])[0];
+
+                document.getElementById('rTotalRentas').textContent = rentas.length;
+                document.getElementById('rIngresos').textContent    = '$' + totalIngresado.toFixed(2);
+                document.getElementById('rPromedio').textContent    = '$' + promedio.toFixed(2);
+                document.getElementById('rArticuloTop').textContent = topArt ? topArt[0] : '—';
+
+                // Gráfica por día
+                const porDia = {};
+                rentas.forEach(r => {
+                    const d = r.fecha_entrega || '';
+                    porDia[d] = (porDia[d]||0) + parseFloat(r.anticipo||0);
+                });
+                const diasLabels = Object.keys(porDia).sort();
+                const diasData   = diasLabels.map(d => porDia[d]);
+
+                if (grafDia) grafDia.destroy();
+                grafDia = new Chart(document.getElementById('graficaDia'), {
+                    type: 'bar',
+                    data: {
+                        labels: diasLabels.map(d => new Date(d+'T00:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short'})),
+                        datasets: [{ label: 'Ingresos', data: diasData,
+                            backgroundColor: '#dee39a', borderColor: '#8a8c1f', borderWidth: 1, borderRadius: 4 }]
+                    },
+                    options: { responsive:true, plugins:{ legend:{display:false} },
+                        scales:{ y:{ beginAtZero:true, ticks:{ callback: v => '$'+v } } } }
+                });
+
+                // Gráfica artículos
+                const artLabels = Object.keys(artCount).sort((a,b) => artCount[b]-artCount[a]).slice(0,6);
+                const artData   = artLabels.map(a => artCount[a]);
+                const colores   = ['#dee39a','#b0b540','#8a8c1f','#65661a','#c9db82','#a0a830'];
+
+                if (grafArt) grafArt.destroy();
+                grafArt = new Chart(document.getElementById('graficaArticulos'), {
+                    type: 'doughnut',
+                    data: { labels: artLabels, datasets: [{ data: artData,
+                        backgroundColor: colores, borderWidth: 2, borderColor:'#fff' }] },
+                    options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } } } }
+                });
+
+                // Top clientes
+                const clientes = {};
+                rentas.forEach(r => {
+                    if (!clientes[r.cliente]) clientes[r.cliente] = { total:0, count:0, ultimo:'' };
+                    clientes[r.cliente].total  += parseFloat(r.precio||0);
+                    clientes[r.cliente].count  += 1;
+                    clientes[r.cliente].ultimo  = r.articulo;
+                });
+                const topClientes = Object.entries(clientes).sort((a,b) => b[1].total - a[1].total).slice(0,10);
+                document.getElementById('tablaClientes').innerHTML = topClientes.map(([nombre, d], i) =>
+                    `<tr>
+                        <td>${i+1}</td>
+                        <td><strong>${nombre}</strong></td>
+                        <td style="text-align:center">${d.count}</td>
+                        <td>$${d.total.toFixed(2)}</td>
+                        <td>${d.ultimo}</td>
+                    </tr>`
+                ).join('');
+
+            } catch(e) { alert('Error al generar reporte.'); }
+        }
+
+        function limpiarMetricas() {
+            ['rTotalRentas','rIngresos','rPromedio','rArticuloTop'].forEach(id =>
+                document.getElementById(id).textContent = '0');
+            document.getElementById('tablaClientes').innerHTML =
+                '<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">Sin datos en el período.</td></tr>';
+        }
+
+        cargarReportes();
+    </script>
+</body>
+</html>
