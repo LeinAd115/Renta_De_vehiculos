@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-4">Módulo de Renta Activa</h3>
+
+<div class="table-responsive bg-white rounded shadow-sm p-3">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Artículo</th>
+                <th>Estado</th>
+                <th>Hora Inicio</th>
+                <th>Entrega Programada</th>
+                <th>Minutos Restantes</th>
+                <th>Batería / Diagnóstico</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rentas %}
+            <tr>
+                <td><strong>{{ r.numero_articulo }}</strong></td>
+                <td>
+                    <span class="badge {% if r.estado_renta == 'ACTIVA' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                        {{ r.estado_renta }}
+                    </span>
+                </td>
+                <td>{{ r.hora_inicio.strftime('%H:%M:%S') if r.hora_inicio }}</td>
+                <td>{{ r.hora_entrega_programada.strftime('%H:%M:%S') if r.hora_entrega_programada }}</td>
+                <td>
+                    {% if r.minutos_restantes < 0 %}
+                        <span class="text-danger fw-bold">Vencido ({{ r.minutos_restantes | abs }} min retraso)</span>
+                    {% else %}
+                        <span class="text-success fw-bold">{{ r.minutos_restantes }} min</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <small class="d-block">{{ r.estado_bateria_diagnostico }}</small>
+                    {% if r.aplica_bateria %}
+                        <span class="badge bg-secondary">{{ r.minutos_bateria_restante }} min rest.</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        {% if r.estado_renta == 'ACTIVA' %}
+                        <form method="POST" action="{{ url_for('pausar', detalle_id=r.detalle_id) }}">
+                            <button class="btn btn-warning me-1">Pausar</button>
+                        </form>
+                        {% elif r.estado_renta == 'PAUSADA' %}
+                        <form method="POST" action="{{ url_for('reanudar', detalle_id=r.detalle_id) }}">
+                            <button class="btn btn-info me-1">Reanudar</button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('entregar', detalle_id=r.detalle_id) }}">
+                            <button class="btn btn-success">Entregar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">No hay rentas activas en este momento.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

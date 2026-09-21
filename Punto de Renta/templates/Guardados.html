@@ -1,176 +1,30 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
-    <title>Guardados – Punto de Renta</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <header>
-        <h1>&#x2302; Punto de Renta</h1>
-        <div class="user-info">
-            <a href="/punto_renta" class="btn-volver">← Volver</a>
-            <span>{{ session['usuario'] }}</span>
-            <a href="/logout">Cerrar sesión</a>
-        </div>
-    </header>
+{% block content %}
+<h3 class="mb-4">Artículos Guardados (Sin Batería o en Espera)</h3>
 
-    <main>
-        <h2>Guardados</h2>
-
-        <!-- Métricas -->
-        <div class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-value" id="totalGuardados">0</div>
-                <div class="metric-label">Rentas guardadas</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value" id="totalRecaudado">$0</div>
-                <div class="metric-label">Total recaudado</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value" id="totalMes">0</div>
-                <div class="metric-label">Este mes</div>
-            </div>
-        </div>
-
-        <!-- Filtros -->
-        <div class="card">
-            <div class="section-title">Buscar en historial</div>
-            <div class="form-row" style="align-items:flex-end;">
-                <div class="form-group">
-                    <label>Cliente o artículo</label>
-                    <input type="text" id="buscarGuardado" placeholder="Buscar..." oninput="filtrar()">
-                </div>
-                <div class="form-group">
-                    <label>Desde</label>
-                    <input type="date" id="filtroDesde" onchange="filtrar()">
-                </div>
-                <div class="form-group">
-                    <label>Hasta</label>
-                    <input type="date" id="filtroHasta" onchange="filtrar()">
-                </div>
-            </div>
-            <div style="display:flex; gap:10px; margin-top:4px;">
-                <button class="btn" onclick="cargarGuardados()">Actualizar</button>
-                <button class="btn-secondary" onclick="limpiarFiltros()">Limpiar filtros</button>
-            </div>
-        </div>
-
-        <!-- Tabla historial -->
-        <div class="card">
-            <div class="section-title">Historial de Rentas</div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Cliente</th>
-                            <th>Artículo</th>
-                            <th>Cant.</th>
-                            <th>Entregado</th>
-                            <th>Devuelto</th>
-                            <th>Total</th>
-                            <th>Anticipo</th>
-                            <th>Estado pago</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaGuardados">
-                        <tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Cargando...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div style="margin-top:12px; text-align:right;">
-                <small id="conteoFiltrado" style="color:#777;"></small>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        let _guardados = [];
-
-        async function cargarGuardados() {
-            try {
-                const resp = await fetch('/obtener_guardados');
-                const data = await resp.json();
-                _guardados = data.guardados || [];
-                filtrar();
-                actualizarMetricas(_guardados);
-            } catch(e) {
-                document.getElementById('tablaGuardados').innerHTML =
-                    '<tr><td colspan="9" style="text-align:center;color:#e74c3c;">Error al cargar.</td></tr>';
-            }
-        }
-
-        function filtrar() {
-            const q = document.getElementById('buscarGuardado').value.toLowerCase();
-            const desde = document.getElementById('filtroDesde').value;
-            const hasta = document.getElementById('filtroHasta').value;
-
-            let lista = _guardados.filter(r => {
-                const texto = (r.cliente + r.articulo).toLowerCase();
-                const coincide = texto.includes(q);
-                const fechaR = r.fecha_devolucion || r.fecha_entrega;
-                const dentroRango = (!desde || fechaR >= desde) && (!hasta || fechaR <= hasta);
-                return coincide && dentroRango;
-            });
-
-            renderTabla(lista);
-        }
-
-        function renderTabla(lista) {
-            const tbody = document.getElementById('tablaGuardados');
-            document.getElementById('conteoFiltrado').textContent =
-                `Mostrando ${lista.length} registro${lista.length !== 1 ? 's' : ''}`;
-
-            if (!lista.length) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">Sin registros.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = lista.map((r, i) => {
-                const saldo = parseFloat(r.precio) - parseFloat(r.anticipo || 0);
-                const estadoBadge = saldo <= 0
-                    ? '<span class="badge badge-pagado">Pagado</span>'
-                    : '<span class="badge badge-pendiente">Saldo $' + saldo.toFixed(2) + '</span>';
-                return `<tr>
-                    <td>${i + 1}</td>
-                    <td><strong>${r.cliente}</strong><br><small style="color:#999">${r.telefono || ''}</small></td>
-                    <td>${r.articulo}</td>
-                    <td style="text-align:center">${r.cantidad}</td>
-                    <td>${fmtFecha(r.fecha_entrega)}</td>
-                    <td>${fmtFecha(r.fecha_devolucion)}</td>
-                    <td>$${parseFloat(r.precio).toFixed(2)}</td>
-                    <td>$${parseFloat(r.anticipo || 0).toFixed(2)}</td>
-                    <td>${estadoBadge}</td>
-                </tr>`;
-            }).join('');
-        }
-
-        function actualizarMetricas(lista) {
-            document.getElementById('totalGuardados').textContent = lista.length;
-            const total = lista.reduce((s, r) => s + parseFloat(r.precio || 0), 0);
-            document.getElementById('totalRecaudado').textContent = '$' + total.toFixed(2);
-            const mesActual = new Date().toISOString().slice(0, 7);
-            const esMes = lista.filter(r => (r.fecha_devolucion || '').startsWith(mesActual)).length;
-            document.getElementById('totalMes').textContent = esMes;
-        }
-
-        function fmtFecha(f) {
-            if (!f) return '—';
-            return new Date(f + 'T00:00:00').toLocaleDateString('es-MX');
-        }
-
-        function limpiarFiltros() {
-            document.getElementById('buscarGuardado').value = '';
-            document.getElementById('filtroDesde').value = '';
-            document.getElementById('filtroHasta').value = '';
-            filtrar();
-        }
-
-        cargarGuardados();
-    </script>
-</body>
-</html>
+<div class="table-responsive bg-white rounded shadow-sm p-3">
+    <table class="table table-hover align-middle">
+        <thead class="table-secondary">
+            <tr>
+                <th>Número de Artículo</th>
+                <th>Batería Restante</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for g in guardados %}
+            <tr>
+                <td><strong>{{ g.numero_articulo }}</strong></td>
+                <td>{{ g.minutos_bateria_restante }} min</td>
+                <td><span class="badge bg-warning text-dark">{{ g.estado }}</span></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center text-muted py-4">No hay artículos guardados actualmente.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

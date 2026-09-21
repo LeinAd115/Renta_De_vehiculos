@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-4">Configuraciones del Sistema</h3>
+
+<div class="row">
+    <!-- Formulario: Categorías -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Añadir Categoría</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="accion" value="crear_categoria">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de Categoría:</label>
+                        <input type="text" name="nombre" class="form-control" required placeholder="Ej: Bicicletas, Scooters">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Costo por Minuto ($):</label>
+                        <input type="number" step="0.10" name="costo_minuto" class="form-control" required placeholder="Ej: 2.50">
+                    </div>
+                    <button class="btn btn-primary w-100">Guardar Categoría</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario: Artículos -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Añadir Artículo</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="accion" value="registrar_articulo">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Número / Código:</label>
+                            <input type="text" name="numero_articulo" class="form-control" required placeholder="Ej: ART-001">
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Categoría:</label>
+                            <select name="categoria_id" class="form-select" required>
+                                <option value="">Selecciona una categoría...</option>
+                                {% for c in categorias %}
+                                    <option value="{{ c.id }}">{{ c.nombre }} (${{ c.costo_por_minuto }}/min)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check my-2">
+                        <input class="form-check-input" type="checkbox" name="aplica_bateria" id="check_bat" onchange="document.getElementById('div_bat').classList.toggle('d-none', !this.checked)">
+                        <label class="form-check-label" for="check_bat">¿Usa batería eléctrica?</label>
+                    </div>
+                    <div class="mb-3 d-none" id="div_bat">
+                        <label class="form-label">Minutos de Batería Inicial:</label>
+                        <input type="number" name="bateria_minutos" class="form-control" placeholder="Ej: 60">
+                    </div>
+                    <button class="btn btn-success w-100">Registrar Artículo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla: Artículos Registrados -->
+<div class="card shadow-sm mt-2 mb-5">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Inventario de Artículos Registrados</h5>
+        <span class="badge bg-light text-dark">Total: {{ articulos|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th># Artículo</th>
+                        <th>Categoría</th>
+                        <th>Costo/Min</th>
+                        <th>Batería</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for art in articulos %}
+                    <tr>
+                        <td><strong>{{ art.numero_articulo }}</strong></td>
+                        <td>{{ art.categoria_nombre }}</td>
+                        <td>${{ art.costo_por_minuto }}</td>
+                        <td>
+                            {% if art.aplica_bateria %}
+                                <span class="badge bg-info text-dark">{{ art.minutos_bateria_restante }} min</span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary border">No aplica</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if art.estado == 'DISPONIBLE' %}
+                                <span class="badge bg-success">DISPONIBLE</span>
+                            {% elif art.estado == 'RENTADO' %}
+                                <span class="badge bg-primary">RENTADO</span>
+                            {% elif art.estado == 'GUARDADO' %}
+                                <span class="badge bg-warning text-dark">GUARDADO</span>
+                            {% elif art.estado == 'FUERA_DE_SERVICIO' %}
+                                <span class="badge bg-secondary">FUERA DE SERVICIO</span>
+                            {% elif art.estado == 'DADO_DE_BAJA' %}
+                                <span class="badge bg-danger">DADO DE BAJA</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-outline-primary btn-sm me-1" 
+                                    onclick="abrirModalEditar({{ art.id }}, '{{ art.numero_articulo }}', {{ art.categoria_id }}, {{ 'true' if art.aplica_bateria else 'false' }}, {{ art.minutos_bateria_restante or 0 }}, '{{ art.estado }}')">
+                                Editar
+                            </button>
+
+                            {% if art.estado != 'DADO_DE_BAJA' %}
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="accion" value="cambiar_estado">
+                                    <input type="hidden" name="articulo_id" value="{{ art.id }}">
+                                    <input type="hidden" name="nuevo_estado" value="DADO_DE_BAJA">
+                                    <button class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Seguro que deseas dar de baja este artículo?')">Dar de Baja</button>
+                                </form>
+                            {% endif %}
+
+                            {% if art.estado == 'DISPONIBLE' %}
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="accion" value="cambiar_estado">
+                                    <input type="hidden" name="articulo_id" value="{{ art.id }}">
+                                    <input type="hidden" name="nuevo_estado" value="FUERA_DE_SERVICIO">
+                                    <button class="btn btn-outline-secondary btn-sm">Fuera de Servicio</button>
+                                </form>
+                            {% elif art.estado in ['FUERA_DE_SERVICIO', 'DADO_DE_BAJA'] %}
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="accion" value="cambiar_estado">
+                                    <input type="hidden" name="articulo_id" value="{{ art.id }}">
+                                    <input type="hidden" name="nuevo_estado" value="DISPONIBLE">
+                                    <button class="btn btn-outline-success btn-sm">Reactivar</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No hay artículos dados de alta aún.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="accion" value="editar_articulo">
+                <input type="hidden" id="edit_articulo_id" name="articulo_id">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Editar Artículo: <span id="modal_num_art"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Categoría:</label>
+                        <select name="categoria_id" id="edit_categoria_id" class="form-select" required>
+                            {% for c in categorias %}
+                                <option value="{{ c.id }}">{{ c.nombre }} (${{ c.costo_por_minuto }}/min)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="aplica_bateria" id="edit_aplica_bateria" onchange="document.getElementById('edit_div_bat').classList.toggle('d-none', !this.checked)">
+                        <label class="form-check-label" for="edit_aplica_bateria">¿Aplica batería?</label>
+                    </div>
+                    <div class="mb-3" id="edit_div_bat">
+                        <label class="form-label">Minutos de Batería Restante:</label>
+                        <input type="number" name="bateria_minutos" id="edit_bateria_minutos" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Estado:</label>
+                        <select name="estado" id="edit_estado" class="form-select" required>
+                            <option value="DISPONIBLE">DISPONIBLE</option>
+                            <option value="GUARDADO">GUARDADO</option>
+                            <option value="FUERA_DE_SERVICIO">FUERA DE SERVICIO</option>
+                            <option value="DADO_DE_BAJA">DADO DE BAJA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function abrirModalEditar(id, numArt, catId, aplicaBat, batMin, estado) {
+    document.getElementById('edit_articulo_id').value = id;
+    document.getElementById('modal_num_art').innerText = numArt;
+    document.getElementById('edit_categoria_id').value = catId;
+    
+    const checkBat = document.getElementById('edit_aplica_bateria');
+    checkBat.checked = aplicaBat;
+    
+    const divBat = document.getElementById('edit_div_bat');
+    divBat.classList.toggle('d-none', !aplicaBat);
+    document.getElementById('edit_bateria_minutos').value = batMin;
+    
+    document.getElementById('edit_estado').value = estado;
+
+    const modal = new bootstrap.Modal(document.getElementById('modalEditar'));
+    modal.show();
+}
+</script>
+{% endblock %}
