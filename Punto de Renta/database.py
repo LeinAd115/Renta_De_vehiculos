@@ -2,7 +2,7 @@ import mysql.connector
 from contextlib import contextmanager
 
 class DatabaseConnection:
-    def __init__(self, host="localhost", user="root", password="Kimberly", database="sistema_rentas", port=3307):
+    def __init__(self, host="localhost", user="root", password="danixGd2", database="amistoso", port=3306):
         self.config = {
             'host': host,
             'user': user,

@@ -9,7 +9,7 @@ import functools
 app = Flask(__name__)
 app.secret_key = "clave_secreta_para_sesiones_flask"
 
-db = DatabaseConnection(host="localhost", user="root", password="Kimberly", database="sistema_rentas", port=3307)
+db = DatabaseConnection(host="localhost", user="root", password="danixGd2", database="amistoso", port=3306)
 auth_srv = AuthService(db)
 renta_srv = PuntoRentaService(db)
 activa_srv = RentaActivaService(db)
