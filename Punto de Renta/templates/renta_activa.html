@@ -28,13 +28,18 @@
                 <td>{{ r.hora_inicio.strftime('%H:%M:%S') if r.hora_inicio }}</td>
                 <td>{{ r.hora_entrega_programada.strftime('%H:%M:%S') if r.hora_entrega_programada }}</td>
                 <td>
-                    {% if r.minutos_restantes < 0 %}
-                        <span class="text-danger fw-bold">Vencido ({{ r.minutos_restantes | abs }} min retraso)</span>
-                    {% else %}
-                        <span class="text-success fw-bold">{{ r.minutos_restantes }} min</span>
-                    {% endif %}
-                </td>
-                <td>
+                     <span
+                       class="contador-tiempo fw-bold"
+                        data-entrega="{{ r.hora_entrega_programada.isoformat() if r.hora_entrega_programada else '' }}"
+                        data-estado="{{ r.estado_renta }}"
+                         >
+                          {% if r.minutos_restantes < 0 %}
+                             Vencido ({{ r.minutos_restantes | abs }} min)
+                              {% else %}
+                               {{ r.minutos_restantes }} min
+                               {% endif %}
+                            </span>
+                        </td>
                     <small class="d-block">{{ r.estado_bateria_diagnostico }}</small>
                     {% if r.aplica_bateria %}
                         <span class="badge bg-secondary">{{ r.minutos_bateria_restante }} min rest.</span>
@@ -65,4 +70,81 @@
         </tbody>
     </table>
 </div>
+
+<script>
+function actualizarContadores() {
+
+    const contadores = document.querySelectorAll(".contador-tiempo");
+
+    contadores.forEach(contador => {
+
+        const fechaEntrega = contador.dataset.entrega;
+        const estado = contador.dataset.estado;
+
+        if (!fechaEntrega) {
+            return;
+        }
+
+        // Si está pausada, NO modificar el contador
+        if (estado === "PAUSADA") {
+            contador.classList.remove("text-success");
+            contador.classList.remove("text-danger");
+            contador.classList.add("text-warning");
+
+            return;
+        }
+
+        const entrega = new Date(fechaEntrega).getTime();
+        const ahora = Date.now();
+
+        const diferencia = entrega - ahora;
+
+        // Tiempo vencido
+        if (diferencia <= 0) {
+
+            const retrasoTotal = Math.floor(Math.abs(diferencia) / 1000);
+
+            const minutos = Math.floor(retrasoTotal / 60);
+            const segundos = retrasoTotal % 60;
+
+            contador.classList.remove("text-success");
+            contador.classList.add("text-danger");
+
+            contador.textContent =
+                `Vencido (${minutos} min ${segundos.toString().padStart(2, "0")} seg retraso)`;
+
+            return;
+        }
+
+        // Tiempo restante
+        const segundosTotales = Math.floor(diferencia / 1000);
+
+        const horas = Math.floor(segundosTotales / 3600);
+        const minutos = Math.floor((segundosTotales % 3600) / 60);
+        const segundos = segundosTotales % 60;
+
+        contador.classList.remove("text-danger");
+        contador.classList.remove("text-warning");
+        contador.classList.add("text-success");
+
+        if (horas > 0) {
+
+            contador.textContent =
+                `${horas} h ` +
+                `${minutos.toString().padStart(2, "0")} min ` +
+                `${segundos.toString().padStart(2, "0")} seg`;
+
+        } else {
+
+            contador.textContent =
+                `${minutos} min ` +
+                `${segundos.toString().padStart(2, "0")} seg`;
+        }
+    });
+}
+
+actualizarContadores();
+
+setInterval(actualizarContadores, 1000);
+</script>
 {% endblock %}
